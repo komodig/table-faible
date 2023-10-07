@@ -95,6 +95,11 @@ class DataFrameMappings(ABC):
                 else:
                     results.update({ma.dst: val})
 
+                if ma.side_effects:
+                    for col, mod_func in ma.side_effects.items():
+                        new_val = mod_func(val, row, results)
+                        results.update({col: new_val})
+
             rows.append(results)
 
         return pd.DataFrame(rows)
