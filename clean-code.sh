@@ -1,10 +1,10 @@
 #!/bin/bash
 
-MODULES=`ls *.py`
+APP="core"
 
 source venv/bin/activate
 
-for mod in $MODULES; do
+for mod in $APP; do
   echo "$mod"
   python3 -m flake8 --statistics --count $mod
   python3 -m isort --check-only $mod
