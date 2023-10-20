@@ -67,7 +67,7 @@ class DataFrameMappings(ABC):
 
         rows = []
         for _, row in self.source_df.iterrows():
-            results = OrderedDict
+            results = OrderedDict()
             for ma in self.mappings:
                 if ma.const:
                     val = ma.src
