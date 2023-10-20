@@ -100,6 +100,7 @@ class DataFrameMappings(ABC):
                         new_val = mod_func(val, row, results)
                         results.update({col: new_val})
 
-            rows.append(results)
+            if len(results):
+                rows.append(results)
 
         return pd.DataFrame(rows)

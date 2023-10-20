@@ -1,14 +1,19 @@
 import unittest
+from collections import OrderedDict
 from core.mapping import Mapping, DataFrameMappings
 import pandas as pd
 
 
+def family_with_kids(val: str, row: pd.Series, results: OrderedDict) -> bool:
+    return True if int(row['children']) > 0 else False
+
+
 class MyMappings(DataFrameMappings):
     mappings = [
-        Mapping('fname', 'family'),
-        Mapping('pnames', 'parents'),
-        Mapping('knames', 'kids'),
-        Mapping('children', 'members')
+        Mapping('fname', 'family').condition(family_with_kids),
+        Mapping('children', 'members').condition(family_with_kids).modify(lambda x: int(x) + 2),
+        Mapping('pnames', 'parents').condition(family_with_kids),
+        Mapping('knames', 'kids').condition(family_with_kids),
     ]
 
     test_table = {
@@ -29,4 +34,4 @@ class TestMappings(unittest.TestCase):
 
     def test_mapping(self):
         res_table = self.test_mappings.run_mappings()
-        self.assertEqual(len(res_table), 4)
+        self.assertEqual(len(res_table.index), 3)
