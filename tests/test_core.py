@@ -35,3 +35,4 @@ class TestMappings(unittest.TestCase):
     def test_mapping(self):
         res_table = self.test_mappings.run_mappings()
         self.assertEqual(len(res_table.index), 3)
+        self.assertEqual(res_table.loc[0].members, 5)
