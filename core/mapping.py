@@ -11,6 +11,28 @@ logger = logging.getLogger(__name__)
 NOT_SET = np.NaN
 
 
+class MappingCondition:
+    def __init__(self, callback_function: Callable):
+        self.condition_callable = callback_function
+
+    def evaluate(self, val: str, row: pd.Series, results: OrderedDict) -> bool:
+        res = self.condition_callable(val, row, results)
+        assert isinstance(res, bool)
+        return res
+
+
+class Modification:
+    def __init__(self, callback_function: Callable):
+        self.modification_callable = callback_function
+
+    def apply(self, val: str, row: pd.Series, results: OrderedDict) -> str:
+        try:
+            return self.modification_callable(val, row, results)
+        except TypeError:
+            # in case of lambda function with single arg
+            return self.modification_callable(val)
+
+
 class Mapping:
     def __init__(self,
                  src_column: str, dst_column: str,
@@ -22,9 +44,9 @@ class Mapping:
         self.const = const
         # value from src column is appended to existing value of dst column
         self.append = append
-        # call-back function to modify data
+        # Modification instance
         self.mod = None
-        # call-back function for conditional data-mappings
+        # Condition instance
         self.cond = None
         # if mapping effects more than just the destination column
         # side effects can be specified as kwargs: {'column_name': mod_function}
@@ -32,12 +54,12 @@ class Mapping:
         # the entire data-row to manipulate more than dest_column
         self.side_effects = None
 
-    def condition(self, cond_callback: Callable):
-        self.cond = cond_callback
+    def condition(self, cond_cb: Callable):
+        self.cond = MappingCondition(cond_cb)
         return self
 
-    def modify(self, mod_callback: Callable):
-        self.mod = mod_callback
+    def modify(self, mod_cb: Callable):
+        self.mod = Modification(mod_cb)
         return self
 
     def side_effects(self, column_functions: OrderedDict):
@@ -76,19 +98,15 @@ class DataFrameMappings(ABC):
                         val = str(row[ma.src]).strip()
                     except KeyError:
                         val = NOT_SET
-                        if ma.cond is None \
-                                or (
-                                    ma.cond is not None
-                                    and ma.cond(val, row, results)
-                                ):
+                        if ma.cond is None or ma.cond.evaluate(val, row, results) is True:
                             # no error if src column wasn't required
                             logger.error(f'missing source column: "{ma.src}"')
 
-                if ma.cond is not None and not ma.cond(val, row, results):
+                if ma.cond is not None and not ma.cond.evaluate(val, row, results):
                     continue
 
                 if ma.mod is not None and val != NOT_SET:
-                    val = ma.mod(val)
+                    val = ma.mod.apply(val, row, results)
 
                 if ma.append:
                     results[ma.dst] += val

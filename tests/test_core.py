@@ -27,15 +27,39 @@ class MyMappings(DataFrameMappings):
         self.source_df = pd.DataFrame(self.test_table)
 
 
+class NoConditionMappings(MyMappings):
+    mappings = [
+        Mapping('fname', 'family'),
+        Mapping('children', 'members').modify(lambda x: int(x) + 2),
+        Mapping('pnames', 'parents'),
+        Mapping('knames', 'kids'),
+    ]
+
+
 class TestMappings(unittest.TestCase):
     def setUp(self):
         self.test_mappings = MyMappings()
         self.test_mappings.prepare()
 
-    def test_mapping(self):
+    def test_mapping_condition(self):
         res_table = self.test_mappings.run_mappings()
         self.assertEqual(len(res_table.index), 3)
         self.assertEqual(len(res_table.columns), 4)
         self.assertEqual(res_table.columns[0], 'family')
         self.assertEqual(res_table.columns[1], 'members')
         self.assertEqual(res_table.loc[0].members, 5)
+
+
+class TestMappingsSimple(unittest.TestCase):
+    def setUp(self):
+        self.test_mappings = NoConditionMappings()
+        self.test_mappings.prepare()
+
+    def test_mapping_no_condition(self):
+        res_table = self.test_mappings.run_mappings()
+        self.assertEqual(len(res_table.index), 4)
+        self.assertEqual(len(res_table.columns), 4)
+        self.assertEqual(res_table.columns[0], 'family')
+        self.assertEqual(res_table.columns[1], 'members')
+        self.assertEqual(res_table.loc[0].members, 5)
+        self.assertEqual(res_table.loc[3].kids, '')
