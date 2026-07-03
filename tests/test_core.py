@@ -20,7 +20,7 @@ class MyMappings(DataFrameMappings):
         'fname': ['TANNER', 'SIMPSON', 'BUNDY', 'SMITH'],
         'pnames': ['Kate, Willie', 'March, Homer', 'Peggy, Al', 'Jane, John'],
         'knames': ['Lynn, Brian, Alf', 'Bart, Lisa, Maggie', 'Kelly, Bud', ''],
-        'children': [3, 2, 2, 0]
+        'children': [3, 3, 2, 0]
     }
 
     def prepare(self):
